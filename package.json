@@ -1,5 +1,5 @@
 {
-  "name": "babel-plugin-import",
+  "name": "babel-plugin-import-custom",
   "version": "1.11.0",
   "description": "Component modular import plugin for babel.",
   "repository": {
@@ -20,9 +20,9 @@
   ],
   "keywords": [
     "babel-plugin",
-    "antd"
+    "iview"
   ],
-  "author": "chencheng <sorrycc@gmail.com>",
+  "author": "zousanjun <videring@163.com>",
   "license": "MIT",
   "devDependencies": {
     "@babel/core": "^7.0.0",
