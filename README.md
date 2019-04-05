@@ -7,8 +7,10 @@
 
 - `当libraryName为iview时，style设置成css或true，不能按需引入样式，只能全量引入`
 
-## 打包大小对比图
-
+## 打包大小对比图(都引入了vue及相关loader、template-loader)
+| 全量引入   | 按需引入(Button, Table)  | 按需引入(Button) | 按需引入全部组件 |
+| -------- | :----: | :----: | :----: |
+| 634 KiB | 169 KiB | 73.4 KiB | 501 KiB |
 
 Modular import plugin for babel, compatible with iview [antd](https://github.com/ant-design/ant-design), [antd-mobile](https://github.com/ant-design/ant-design-mobile), lodash, [material-ui](http://material-ui.com/), and so on.
 

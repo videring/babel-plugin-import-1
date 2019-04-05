@@ -196,7 +196,7 @@ export default class Plugin {
             for (const name of newImports) {
               const transformedMethodName = this.camel2UnderlineComponentName // eslint-disable-line
                 ? camel2Underline(name) : this.camel2DashComponentName ? camel2Dash(name) : name;
-              const path = winPath(this.customName ? this.customName(transformedMethodName) : (0, _path2.join)(this.libraryName, this.libraryDirectory, transformedMethodName, this.fileName)); // eslint-disable-line
+              const path = winPath(this.customName ? this.customName(transformedMethodName) : join(this.libraryName, this.libraryDirectory, transformedMethodName, this.fileName)); // eslint-disable-line
               asts.push(types.importDeclaration([types.importDefaultSpecifier(types.identifier(name))], types.stringLiteral(path)));
             }
             // 生成 Vue.component("Affix", Affix);...
