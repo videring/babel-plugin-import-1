@@ -1,5 +1,7 @@
+/* eslint-disable */
 import { join } from 'path';
 import { addSideEffect, addDefault, addNamed } from '@babel/helper-module-imports';
+const iviewModule = require('./iview').iviewModule
 
 function camel2Dash(_str) {
   const str = _str[0].toLowerCase() + _str.substr(1);
@@ -26,6 +28,7 @@ export default class Plugin {
     customName,
     transformToDefaultImport,
     types,
+    load,
     index = 0
   ) {
     this.libraryName = libraryName;
@@ -44,6 +47,7 @@ export default class Plugin {
       : transformToDefaultImport;
     this.types = types;
     this.pluginStateKey = `importPluginState${index}`;
+    this.load = typeof load === 'undefined' ? false : load;
   }
 
   getPluginState(state) {
@@ -125,24 +129,102 @@ export default class Plugin {
   }
 
   ImportDeclaration(path, state) {
-    const { node } = path;
+    const node = path.node; // path maybe removed by prev instances.
 
-    // path maybe removed by prev instances.
     if (!node) return;
-
-    const { value } = node.source;
+    const value = node.source.value;
     const libraryName = this.libraryName;
     const types = this.types;
     const pluginState = this.getPluginState(state);
+    let flag = false
+    let indexOfSpec = 0
+
     if (value === libraryName) {
-      node.specifiers.forEach(spec => {
+      const newExps = []
+      const newImports = []
+      const cssImports = []
+      switch (this.libraryName) {
+        case 'iview':
+          if (this.style === true) {
+            this.style = false
+            cssImports.push('iview/src/styles/index.less');
+          } else if (this.style === 'css') {
+            this.style = false
+            cssImports.push('iview/dist/styles/iview.css');
+          }
+          break;
+        default:
+          break;
+      }
+      node.specifiers.forEach((spec, index) => {
+        indexOfSpec = index
         if (types.isImportSpecifier(spec)) {
           pluginState.specified[spec.local.name] = spec.imported.name;
+          if (this.load === 'auto' && iviewModule[spec.imported.name]) { // iview: import { Circle, Table } from 'iview'
+            const _modules = iviewModule[spec.imported.name]
+            for (const m of _modules) {
+              newExps.push({
+                key: spec.imported.name,
+                value: m,
+              });
+            }
+          }
+        } else if (types.isImportDefaultSpecifier(spec)) { // iview: import iView from 'iview'
+          if (this.load === 'auto') {
+            for (const n of Object.keys(iviewModule)) {
+              const _modules = iviewModule[n]
+              for (const m of _modules) {
+                newExps.push({
+                  key: n,
+                  value: m,
+                });
+              }
+              newImports.push(n);
+            }
+          } else {
+            flag = true;
+          }
         } else {
           pluginState.libraryObjs[spec.local.name] = true;
         }
       });
-      pluginState.pathsToRemove.push(path);
+      if (this.load === 'auto') {
+        switch (libraryName) {
+          case 'iview':
+            const asts = []
+            // 生成 import Affix from "iview/src/components/affix";...
+            for (const name of newImports) {
+              const transformedMethodName = this.camel2UnderlineComponentName // eslint-disable-line
+                ? camel2Underline(name) : this.camel2DashComponentName ? camel2Dash(name) : name;
+              const path = winPath(this.customName ? this.customName(transformedMethodName) : (0, _path2.join)(this.libraryName, this.libraryDirectory, transformedMethodName, this.fileName)); // eslint-disable-line
+              asts.push(types.importDeclaration([types.importDefaultSpecifier(types.identifier(name))], types.stringLiteral(path)));
+            }
+            // 生成 Vue.component("Affix", Affix);...
+            for (const exp of newExps) {
+              asts.push(types.expressionStatement(
+                types.callExpression(
+                  types.memberExpression(types.identifier('Vue'), types.identifier('component')),
+                  [types.stringLiteral(exp.value), types.identifier(exp.key)]
+                )
+              ));
+            }
+            for (const css of cssImports) {
+              asts.push(types.importDeclaration([], types.stringLiteral(css)));
+            }
+            path.replaceWithMultiple(asts)
+            break;
+          default:
+            break;
+        }
+      } else if ((indexOfSpec === (node.specifiers.length - 1)) && cssImports && cssImports.length) {
+        const asts = []
+        for (const css of cssImports) {
+          asts.push(types.importDeclaration([], types.stringLiteral(css)));
+        }
+        path.replaceWithMultiple(asts);
+      } else if (!flag) {
+        pluginState.pathsToRemove.push(path);
+      }
     }
   }
 

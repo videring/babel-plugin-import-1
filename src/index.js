@@ -31,6 +31,7 @@ export default function ({ types }) {
             fileName,
             customName,
             transformToDefaultImport,
+            load,
           }, index) => {
             assert(libraryName, 'libraryName should be provided');
             return new Plugin(
@@ -43,6 +44,7 @@ export default function ({ types }) {
               customName,
               transformToDefaultImport,
               types,
+              load,
               index
             );
           });
@@ -58,7 +60,8 @@ export default function ({ types }) {
               opts.fileName,
               opts.customName,
               opts.transformToDefaultImport,
-              types
+              types,
+              opts.load
             ),
           ];
         }

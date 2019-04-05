@@ -1,6 +1,6 @@
 {
   "name": "babel-plugin-import-custom",
-  "version": "1.11.0",
+  "version": "0.0.4",
   "description": "Component modular import plugin for babel.",
   "repository": {
     "type": "git",
@@ -13,7 +13,7 @@
     "debug": "umi-tools test",
     "lint": "eslint --ext .js src",
     "coveralls": "cat ./coverage/lcov.info | coveralls",
-    "publish":  "npm run build && npm publish"
+    "publish": "npm run build && npm publish"
   },
   "pre-commit": [
     "lint"
